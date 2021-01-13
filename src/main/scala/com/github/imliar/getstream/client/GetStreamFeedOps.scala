@@ -3,7 +3,7 @@ package com.github.imliar.getstream.client
 import java.net.URI
 
 import com.github.imliar.getstream.client.models._
-import com.twitter.finagle.httpx.Method.{Delete, Get, Post}
+import com.twitter.finagle.http.Method.{Delete, Get, Post}
 import org.apache.http.message.BasicNameValuePair
 
 import scala.concurrent.{ExecutionContext, Future}

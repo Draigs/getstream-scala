@@ -1,12 +1,13 @@
 package com.github.imliar.getstream.client
 
 import com.github.imliar.getstream.client.models.Feed
-import com.twitter.conversions.time._
-import com.twitter.finagle.Service
+
+import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.httpx.{Http, Request, Response}
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.service.RetryPolicy
 import com.typesafe.config.{Config, ConfigFactory}
+import com.twitter.conversions.DurationOps._
 
 /**
  * GetStreamClient
@@ -77,7 +78,7 @@ case class GetStreamClient(config: Config = DefaultValues.defaultConfig,
 object DefaultValues {
 
   def defaultConfig = {
-    import scala.collection.JavaConversions.mapAsJavaMap
+    import scala.jdk.CollectionConverters.MapHasAsJava
 
     ConfigFactory.parseMap(Map(
       "getstream.http.connectionLimit" -> "10",
@@ -85,7 +86,7 @@ object DefaultValues {
       "getstream.http.host" -> "getstream.io",
       "getstream.http.location" -> "eu-west-api",
       "getstream.http.timeout" -> "30"
-    ))
+    ).asJava)
   }
 
   def defaultHttpClient(config: Config): HttpClient = {
@@ -99,7 +100,7 @@ object DefaultValues {
     val timeout = withFallback.getInt("getstream.http.timeout").seconds
 
     ClientBuilder()
-      .codec(Http())
+      .stack(Http.client)
       .tls(host)
       .hosts(s"$location.$host:443")
       .timeout(timeout)

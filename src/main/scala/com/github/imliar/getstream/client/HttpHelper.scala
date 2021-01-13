@@ -4,12 +4,13 @@ import java.net.{URI, URL}
 
 import com.github.imliar.getstream.client.exceptions.GetStreamParseException
 import com.github.imliar.getstream.client.util.Twitter._
-import com.twitter.finagle.httpx.{Method, RequestBuilder}
+import com.twitter.finagle.http.{Method, RequestBuilder}
 import com.twitter.io.Buf.ByteArray
 import com.twitter.util.JavaTimer
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.message.BasicNameValuePair
-import com.twitter.conversions.time._
+import org.apache.http.NameValuePair
+import com.twitter.conversions.DurationOps._
+
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
@@ -31,7 +32,7 @@ trait HttpHelper {
   def makeHttpRequest[A <: AnyRef, T <: AnyRef](uri: URI,
                                                 method: Method,
                                                 data: A,
-                                                params: Seq[BasicNameValuePair] = Seq.empty)
+                                                params: Seq[NameValuePair] = Seq.empty)
                                                (implicit m1: Manifest[A], m2: Manifest[T]): Future[T] = {
     val requestBuilder = RequestBuilder()
     val payload = try {
@@ -65,8 +66,9 @@ trait HttpHelper {
   /**
    * Build request url with respect to all parameters, location, api key and host
    */
-  private def buildRequestUrl(uri: URI, params: Seq[BasicNameValuePair]): URL = {
-    import scala.collection.JavaConversions._
+  private def buildRequestUrl(uri: URI, params: Seq[NameValuePair]): URL = {
+    import scala.jdk.CollectionConverters.SeqHasAsJava
+
 
     val location = config.getString("getstream.http.location")
     val host = config.getString("getstream.http.host")
@@ -81,7 +83,7 @@ trait HttpHelper {
       .setHost(s"$location.$host")
       .setPath(s"/api/$apiVersion/feed/${feed.feedSlug}/${feed.feedId}$path")
 
-    builder.addParameters(params)
+    builder.addParameters(params.asJava)
     builder.addParameter("api_key", apiKey)
 
     builder.build().toURL

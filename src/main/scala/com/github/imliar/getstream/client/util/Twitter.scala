@@ -1,8 +1,9 @@
 package com.github.imliar.getstream.client.util
 
-import com.twitter.util.{Future => TwFuture, Promise => TwPromise, Try => TwTry, Throw, Return}
-import scala.util.{Try => ScTry}
-import scala.concurrent.{Future => ScFuture, promise => scPromise, ExecutionContext}
+import com.twitter.util.{Return, Throw, Future => TwFuture, Promise => TwPromise, Try => TwTry}
+
+import scala.util.{Failure, Success, Try => ScTry}
+import scala.concurrent.{ExecutionContext, Future => ScFuture, Promise => scPromise}
 
 /**
  * Twitter <=> Scala future convert
@@ -24,9 +25,12 @@ object Twitter {
     def asTwitter(implicit ec: ExecutionContext): TwFuture[T] = {
       val prom = TwPromise[T]()
 
-      // type inference issue
-      sf onSuccess PartialFunction(prom.setValue)
-      sf onFailure { case t => prom setException t }
+      sf.onComplete {
+        case Success(value) => {
+          prom.setValue(value)
+        }
+        case Failure(exception) => prom.setException(exception)
+      }
 
       prom
     }
